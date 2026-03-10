@@ -1,0 +1,25 @@
+# Exclude all LaTeX source files and build artifacts
+00_LaTeX_Sources/
+ICT_Users_Edition/_latex/
+*.tex
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.out
+*.toc
+*.nav
+*.snm
+*.synctex.gz
+*.bbl
+*.blg
+*.vrb
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Original image source files (not needed in repo)
+*.png
