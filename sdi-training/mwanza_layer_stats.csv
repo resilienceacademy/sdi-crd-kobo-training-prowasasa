@@ -1,0 +1,19 @@
+theme,layer,features,geom_type
+Administrative Boundaries,regional_boundaries,1,MultiPolygon
+Administrative Boundaries,district_boundaries_9a3af830e8c06df98d4319c7d480c542,41,MultiPolygon
+Administrative Boundaries,ward_boundaries_3f7b0f55ee9ba5ff1b1d6823c209cd35,21,MultiPolygon
+Health Facilities,mwanza_health_facilities,297,Point
+Businesses & Finance,mwanza_businesses,6759,Point
+Businesses & Finance,mwanza_financial_amenities,280,Point
+Road Network,mwanza_roads,11891,MultiLineString
+Road Network,existing_road_centreline,5049,MultiLineString
+Land Use,existing_landuse_plan,170869,MultiPolygon
+Water Supply,existing_water_supply_network,2361,MultiLineString
+Water Supply,existing_water_supply_zone,28,MultiPolygon
+Water Supply,existing_service_reservoir,15,Point
+Drainage & Flood,existing_natural_drainage_network,341,MultiLineString
+Drainage & Flood,mwanza_drainage_points,3114,MultiPoint
+Hazards (Rockfall),mwanza_rockfall_locations,751,Point
+Hazards (Rockfall),mwanza_households_at_risk_of_rockfall,348,Polygon
+Tourism & POI,mwanza_tourist_facilities,448,Point
+Tourism & POI,mwanza_religious_facilities,210,Point

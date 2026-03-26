@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://crd.resilienceacademy.ac.tz/api/v2/resources?filter{regions.name.in}=Mwanza&page_size=200\")",
+      "Bash(curl -s \"https://crd.resilienceacademy.ac.tz/geoserver/ows?service=WFS&version=2.0.0&request=GetCapabilities\")",
+      "Bash(python3 -c \":*)",
+      "Bash(curl -s \"https://crd.resilienceacademy.ac.tz/api/v2/resources?filter{regions.name.in}=Mwanza&page_size=200&page=2\")",
+      "Bash(source /Users/masoudhamad/miniconda3/bin/activate geoai)",
+      "Bash(python /Users/masoudhamad/workspace/geospatialdev/sdi-training/crd_dashboard.py)"
+    ]
+  }
+}

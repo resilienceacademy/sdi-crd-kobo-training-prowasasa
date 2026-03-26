@@ -1,0 +1,14 @@
+theme,layer,features,geom_type
+Institutions & Facilities,institutions,13,MultiPolygon
+Institutions & Facilities,facilities,90,Point
+Road Network,main_roads,30,MultiLineString
+Road Network,minor_roads,831,MultiLineString
+Road Network,local_roads,187,MultiLineString
+Land Use,existing_landuse,92,MultiPolygon
+Water Infrastructure,waterpipe_network,4857,MultiLineString
+Water Infrastructure,water_treatment,1,MultiPolygon
+Water Infrastructure,storage_tanks,10,Point
+Environment & Conservation,conservation_area,1,MultiPolygon
+Environment & Conservation,rivers,6,MultiLineString
+Administrative Boundaries,tanga_city_boundary,1,MultiPolygon
+Administrative Boundaries,wards_boundaries,28,MultiPolygon

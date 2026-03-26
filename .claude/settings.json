@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:crd.resilienceacademy.ac.tz)",
+      "Bash(grep -r \"definecolor\\\\|setbeamercolor\" '/Users/masoudhamad/Documents/SUZA/Projects/ProWAS-SASA/Training March 2026/SDI_Training_Materials 3' --include=*.tex)",
+      "Read(//Users/masoudhamad/Documents/SUZA/Projects/ProWAS-SASA/**)",
+      "Bash(find \"/Users/masoudhamad/Documents/SUZA/Projects/ProWAS-SASA/Training March 2026/SDI_Training_Materials 3\" -name \"*.tex\" -type f -exec grep -l \"definecolor\\\\|setbeamercolor\" {})",
+      "Bash(find . -name \"*.tex\" -exec sed -i '' -e 's/{RAgreen}{RGB}{0,112,100}/{RAblue}{RGB}{0,117,183}/g' -e 's/{RAdark}{RGB}{0,70,60}/{RAdark}{RGB}{0,52,82}/g' -e 's/{RAlight}{RGB}{213,240,236}/{RAlight}{RGB}{224,244,255}/g' -e 's/{RAaccent}{RGB}{230,168,0}/{RAaccent}{RGB}{5,162,219}/g' -e 's/{codebg}{RGB}{240,248,246}/{codebg}{RGB}{240,248,255}/g' -e 's/{codebg}{RGB}{245,250,249}/{codebg}{RGB}{240,248,255}/g' {} +)",
+      "Bash(find . -name \"*.tex\" -exec sed -i '' 's/RAgreen/RAblue/g' {} +)",
+      "Bash(find . -name \"*.tex\" -exec sed -i '' 's/{RAaccent}{RGB}{5,162,219}/{RAaccent}{RGB}{229,177,21}/g' {} +)",
+      "Bash(for f:*)",
+      "Bash(latexmk -pdf -interaction=nonstopmode -halt-on-error SDI_Training_Plan_ICT_Users.tex)",
+      "Bash(latexmk -pdf -interaction=nonstopmode SDI_Training_Plan_ICT_Users.tex)",
+      "Bash(ln -sf ../00_LaTeX_Sources/slides/ra_logo.png .)",
+      "Bash(ln -sf ../00_LaTeX_Sources/slides/partner_logos.png .)",
+      "Bash(mkdir -p slides)",
+      "Bash(cp ../00_LaTeX_Sources/slides/ra_logo.png slides/)",
+      "Bash(cp ../00_LaTeX_Sources/slides/partner_logos.png slides/)",
+      "Bash(cp 00_LaTeX_Sources/practicals/*.pdf 02_Practical_Guides/)",
+      "Bash(cp 00_LaTeX_Sources/slides/*.pdf 01_Presentations/)",
+      "Bash(cp ICT_Users_Edition/_latex/practicals/*.pdf ICT_Users_Edition/Practicals/)",
+      "Bash(cp ICT_Users_Edition/_latex/slides/*.pdf ICT_Users_Edition/Slides/)",
+      "Bash(ls -d */)",
+      "Bash(cp 00_LaTeX_Sources/slides/*.pdf 01_Slides/)",
+      "Bash(latexmk -pdf -interaction=nonstopmode -halt-on-error Practical_1_Environment_Setup.tex)",
+      "Bash(latexmk -pdf -interaction=nonstopmode -halt-on-error Practical_1.1_Environment_Setup.tex)"
+    ]
+  }
+}
