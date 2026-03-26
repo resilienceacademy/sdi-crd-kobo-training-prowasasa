@@ -23,3 +23,5 @@ Thumbs.db
 
 # Original image source files (not needed in repo)
 *.png
+# Large GeoJSON files (>50MB) - load from CRD API instead
+sdi-training/data/existing_landuse_plan.geojson

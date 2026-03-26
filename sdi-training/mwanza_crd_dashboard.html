@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mwanza CRD Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #F0F4F3; color: #1a1a1a; }
+
+        .header {
+            background: linear-gradient(135deg, #004640 0%, #007064 60%, #009688 100%);
+            color: white; padding: 24px 32px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .header h1 { font-size: 1.6rem; font-weight: 700; }
+        .header .subtitle { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+        .header .timestamp { font-size: 0.75rem; opacity: 0.7; text-align: right; }
+
+        .stats-bar {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 16px; padding: 20px 32px;
+        }
+        .stat-card {
+            background: white; border-radius: 12px; padding: 18px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .stat-card .label { font-size: 0.7rem; color: #6B7280; text-transform: uppercase;
+            letter-spacing: 0.05em; font-weight: 600; }
+        .stat-card .value { font-size: 1.7rem; font-weight: 700; margin-top: 4px; }
+        .stat-card:nth-child(1) { border-left: 4px solid #007064; }
+        .stat-card:nth-child(1) .value { color: #007064; }
+        .stat-card:nth-child(2) { border-left: 4px solid #E74C3C; }
+        .stat-card:nth-child(2) .value { color: #E74C3C; }
+        .stat-card:nth-child(3) { border-left: 4px solid #3498DB; }
+        .stat-card:nth-child(3) .value { color: #3498DB; }
+        .stat-card:nth-child(4) { border-left: 4px solid #F39C12; }
+        .stat-card:nth-child(4) .value { color: #F39C12; }
+        .stat-card:nth-child(5) { border-left: 4px solid #8E44AD; }
+        .stat-card:nth-child(5) .value { color: #8E44AD; }
+        .stat-card:nth-child(6) { border-left: 4px solid #27AE60; }
+        .stat-card:nth-child(6) .value { color: #27AE60; }
+
+        /* Admin boundary section */
+        .admin-section {
+            padding: 0 32px 20px;
+        }
+        .admin-section h2 {
+            font-size: 1rem; color: #004640; font-weight: 700; margin-bottom: 12px;
+        }
+        .admin-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .admin-card {
+            background: white; border-radius: 12px; padding: 18px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            border-top: 3px solid #8E44AD;
+        }
+        .admin-count {
+            font-size: 2rem; font-weight: 700; color: #8E44AD;
+        }
+        .admin-label {
+            font-size: 0.8rem; font-weight: 600; color: #4A5568;
+            text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .admin-names {
+            font-size: 0.78rem; color: #6B7280; margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .main-grid {
+            display: grid; grid-template-columns: 280px 1fr;
+            gap: 20px; padding: 0 32px 20px;
+        }
+        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+        .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+        .card {
+            background: white; border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;
+        }
+        .card-header {
+            padding: 14px 18px; font-weight: 600; font-size: 0.9rem;
+            border-bottom: 1px solid #E5E7EB; color: #004640;
+        }
+        .card-body { padding: 0; }
+
+        #map { height: 580px; width: 100%; }
+
+        .toggle-group { padding: 8px 14px; border-bottom: 1px solid #F0F0F0; }
+        .toggle-title { font-size: 0.7rem; font-weight: 700; color: #004640;
+            text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+        .toggle-item {
+            display: flex; align-items: center; gap: 6px; padding: 3px 0;
+            font-size: 0.76rem; cursor: pointer; color: #374151;
+        }
+        .toggle-item input { margin: 0; cursor: pointer; }
+        .color-dot {
+            width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+        }
+        .feat-count { color: #9CA3AF; font-size: 0.7rem; }
+
+        .bottom-grid {
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px; padding: 0 32px 20px;
+        }
+        @media (max-width: 1100px) { .bottom-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 700px) { .bottom-grid { grid-template-columns: 1fr; } }
+
+        .chart-container { padding: 20px; height: 320px; }
+
+        .tables-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 20px; padding: 0 32px 20px;
+        }
+        @media (max-width: 900px) { .tables-grid { grid-template-columns: 1fr; } }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th { background: #F0F4F3; padding: 10px 14px; text-align: left;
+            font-weight: 600; color: #004640; position: sticky; top: 0; }
+        td { padding: 9px 14px; border-bottom: 1px solid #F0F4F3; }
+        tr:hover { background: #F7FAFA; }
+        code { background: #F0F4F3; padding: 2px 6px; border-radius: 4px;
+            font-size: 0.75rem; color: #374151; }
+
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            color: white; font-size: 0.72rem; font-weight: 600;
+        }
+
+        .table-scroll { max-height: 360px; overflow-y: auto; }
+
+        .footer {
+            text-align: center; padding: 20px; font-size: 0.75rem; color: #9CA3AF;
+        }
+        .footer a { color: #007064; text-decoration: none; }
+
+        .layer-panel { max-height: 550px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>Mwanza Urban Planning Dashboard</h1>
+        <div class="subtitle">Community Resilience Database &mdash; Resilience Academy &mdash; Mwanza Master Plan</div>
+    </div>
+    <div class="timestamp">
+        Generated: 2026-03-26 20:10<br>
+        Source: crd.resilienceacademy.ac.tz
+    </div>
+</div>
+
+<div class="stats-bar">
+    <div class="stat-card">
+        <div class="label">Total Features Loaded</div>
+        <div class="value">202,824</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Health Facilities</div>
+        <div class="value">297</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Water Supply Features</div>
+        <div class="value">2,404</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Road Features</div>
+        <div class="value">16,940</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">CRD Datasets</div>
+        <div class="value">59</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Themes</div>
+        <div class="value">9</div>
+    </div>
+</div>
+
+<!-- Administrative Boundaries Section -->
+<div class="admin-section">
+    <h2>Administrative Boundaries</h2>
+    <div class="admin-grid">
+        
+    <div class="admin-card">
+        <div class="admin-count">1</div>
+        <div class="admin-label">Regions</div>
+        <div class="admin-names">Mwanza</div>
+    </div>
+    <div class="admin-card">
+        <div class="admin-count">41</div>
+        <div class="admin-label">Districts</div>
+        <div class="admin-names">Bugogwa North, Bugogwa South, Bugogwa West, Buhongwa, Buswelu North, Buswelu South, Butimba, City Center, Fella West, Idetemya North, Igoma North, Igoma South, Ilemela, Kisesa North, Kisesa South, Mahina, Mkolani North, Mkolani South, Mkolani West, Nyakato East</div>
+    </div>
+    <div class="admin-card">
+        <div class="admin-count">21</div>
+        <div class="admin-label">Wards</div>
+        <div class="admin-names">N/A</div>
+    </div>
+    </div>
+</div>
+
+<!-- Map + Layer Panel -->
+<div class="main-grid">
+    <div class="sidebar">
+        <div class="card">
+            <div class="card-header">Layer Controls</div>
+            <div class="card-body layer-panel">
+                <div class="toggle-group"><div class="toggle-title">Administrative Boundaries</div>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:regional_boundaries', this.checked)">
+                <span class="color-dot" style="background:#8E44AD"></span>
+                regional_boundaries <span class="feat-count">(1)</span>
+            </label>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:district_boundaries_9a3af830e8c06df98d4319c7d480c542', this.checked)">
+                <span class="color-dot" style="background:#C0392B"></span>
+                district_boundaries_9a3af830e8c06df98d4319c7d480c542 <span class="feat-count">(41)</span>
+            </label>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:ward_boundaries_3f7b0f55ee9ba5ff1b1d6823c209cd35', this.checked)">
+                <span class="color-dot" style="background:#E67E22"></span>
+                ward_boundaries_3f7b0f55ee9ba5ff1b1d6823c209cd35 <span class="feat-count">(21)</span>
+            </label></div><div class="toggle-group"><div class="toggle-title">Health Facilities</div>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:mwanza_health_facilities', this.checked)">
+                <span class="color-dot" style="background:#E74C3C"></span>
+                mwanza_health_facilities <span class="feat-count">(297)</span>
+            </label></div><div class="toggle-group"><div class="toggle-title">Businesses & Finance</div>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:mwanza_businesses', this.checked)">
+                <span class="color-dot" style="background:#007064"></span>
+                mwanza_businesses <span class="feat-count">(6,759)</span>
+            </label>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:mwanza_financial_amenities', this.checked)">
+                <span class="color-dot" style="background:#1ABC9C"></span>
+                mwanza_financial_amenities <span class="feat-count">(280)</span>
+            </label></div><div class="toggle-group"><div class="toggle-title">Road Network</div>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:mwanza_roads', this.checked)">
+                <span class="color-dot" style="background:#F39C12"></span>
+                mwanza_roads <span class="feat-count">(11,891)</span>
+            </label>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:existing_road_centreline', this.checked)">
+                <span class="color-dot" style="background:#D4AC6E"></span>
+                existing_road_centreline <span class="feat-count">(5,049)</span>
+            </label></div><div class="toggle-group"><div class="toggle-title">Land Use</div>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:existing_landuse_plan', this.checked)">
+                <span class="color-dot" style="background:#27AE60"></span>
+                existing_landuse_plan <span class="feat-count">(170,869)</span>
+            </label></div><div class="toggle-group"><div class="toggle-title">Water Supply</div>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:existing_water_supply_network', this.checked)">
+                <span class="color-dot" style="background:#3498DB"></span>
+                existing_water_supply_network <span class="feat-count">(2,361)</span>
+            </label>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:existing_water_supply_zone', this.checked)">
+                <span class="color-dot" style="background:#2980B9"></span>
+                existing_water_supply_zone <span class="feat-count">(28)</span>
+            </label>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:existing_service_reservoir', this.checked)">
+                <span class="color-dot" style="background:#1F618D"></span>
+                existing_service_reservoir <span class="feat-count">(15)</span>
+            </label></div><div class="toggle-group"><div class="toggle-title">Drainage & Flood</div>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:existing_natural_drainage_network', this.checked)">
+                <span class="color-dot" style="background:#5DADE2"></span>
+                existing_natural_drainage_network <span class="feat-count">(341)</span>
+            </label>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:mwanza_drainage_points', this.checked)">
+                <span class="color-dot" style="background:#2E86C1"></span>
+                mwanza_drainage_points <span class="feat-count">(3,114)</span>
+            </label></div><div class="toggle-group"><div class="toggle-title">Hazards (Rockfall)</div>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:mwanza_rockfall_locations', this.checked)">
+                <span class="color-dot" style="background:#922B21"></span>
+                mwanza_rockfall_locations <span class="feat-count">(751)</span>
+            </label>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:mwanza_households_at_risk_of_rockfall', this.checked)">
+                <span class="color-dot" style="background:#E74C3C"></span>
+                mwanza_households_at_risk_of_rockfall <span class="feat-count">(348)</span>
+            </label></div><div class="toggle-group"><div class="toggle-title">Tourism & POI</div>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:mwanza_tourist_facilities', this.checked)">
+                <span class="color-dot" style="background:#AF7AC5"></span>
+                mwanza_tourist_facilities <span class="feat-count">(448)</span>
+            </label>
+            <label class="toggle-item">
+                <input type="checkbox" checked onchange="toggleLayer('geonode:mwanza_religious_facilities', this.checked)">
+                <span class="color-dot" style="background:#7D3C98"></span>
+                mwanza_religious_facilities <span class="feat-count">(210)</span>
+            </label></div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Mwanza Interactive Map &mdash; 18 layers loaded</div>
+        <div class="card-body"><div id="map"></div></div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="bottom-grid">
+    <div class="card">
+        <div class="card-header">Features by Theme</div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="themeChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Business Categories</div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="bizChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Land Use Categories</div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="landUseChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tables -->
+<div class="tables-grid">
+    <div class="card">
+        <div class="card-header">Loaded Layer Details (18 layers)</div>
+        <div class="card-body">
+            <div class="table-scroll">
+                <table>
+                    <thead><tr><th>Theme</th><th>Layer</th><th>Features</th><th>Geometry</th></tr></thead>
+                    <tbody>
+        <tr>
+            <td>Administrative Boundaries</td>
+            <td><code>regional_boundaries</code></td>
+            <td>1</td>
+            <td>MultiPolygon</td>
+        </tr>
+        <tr>
+            <td>Administrative Boundaries</td>
+            <td><code>district_boundaries_9a3af830e8c06df98d4319c7d480c542</code></td>
+            <td>41</td>
+            <td>MultiPolygon</td>
+        </tr>
+        <tr>
+            <td>Administrative Boundaries</td>
+            <td><code>ward_boundaries_3f7b0f55ee9ba5ff1b1d6823c209cd35</code></td>
+            <td>21</td>
+            <td>MultiPolygon</td>
+        </tr>
+        <tr>
+            <td>Health Facilities</td>
+            <td><code>mwanza_health_facilities</code></td>
+            <td>297</td>
+            <td>Point</td>
+        </tr>
+        <tr>
+            <td>Businesses & Finance</td>
+            <td><code>mwanza_businesses</code></td>
+            <td>6,759</td>
+            <td>Point</td>
+        </tr>
+        <tr>
+            <td>Businesses & Finance</td>
+            <td><code>mwanza_financial_amenities</code></td>
+            <td>280</td>
+            <td>Point</td>
+        </tr>
+        <tr>
+            <td>Road Network</td>
+            <td><code>mwanza_roads</code></td>
+            <td>11,891</td>
+            <td>MultiLineString</td>
+        </tr>
+        <tr>
+            <td>Road Network</td>
+            <td><code>existing_road_centreline</code></td>
+            <td>5,049</td>
+            <td>MultiLineString</td>
+        </tr>
+        <tr>
+            <td>Land Use</td>
+            <td><code>existing_landuse_plan</code></td>
+            <td>170,869</td>
+            <td>MultiPolygon</td>
+        </tr>
+        <tr>
+            <td>Water Supply</td>
+            <td><code>existing_water_supply_network</code></td>
+            <td>2,361</td>
+            <td>MultiLineString</td>
+        </tr>
+        <tr>
+            <td>Water Supply</td>
+            <td><code>existing_water_supply_zone</code></td>
+            <td>28</td>
+            <td>MultiPolygon</td>
+        </tr>
+        <tr>
+            <td>Water Supply</td>
+            <td><code>existing_service_reservoir</code></td>
+            <td>15</td>
+            <td>Point</td>
+        </tr>
+        <tr>
+            <td>Drainage & Flood</td>
+            <td><code>existing_natural_drainage_network</code></td>
+            <td>341</td>
+            <td>MultiLineString</td>
+        </tr>
+        <tr>
+            <td>Drainage & Flood</td>
+            <td><code>mwanza_drainage_points</code></td>
+            <td>3,114</td>
+            <td>MultiPoint</td>
+        </tr>
+        <tr>
+            <td>Hazards (Rockfall)</td>
+            <td><code>mwanza_rockfall_locations</code></td>
+            <td>751</td>
+            <td>Point</td>
+        </tr>
+        <tr>
+            <td>Hazards (Rockfall)</td>
+            <td><code>mwanza_households_at_risk_of_rockfall</code></td>
+            <td>348</td>
+            <td>Polygon</td>
+        </tr>
+        <tr>
+            <td>Tourism & POI</td>
+            <td><code>mwanza_tourist_facilities</code></td>
+            <td>448</td>
+            <td>Point</td>
+        </tr>
+        <tr>
+            <td>Tourism & POI</td>
+            <td><code>mwanza_religious_facilities</code></td>
+            <td>210</td>
+            <td>Point</td>
+        </tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">All Mwanza Datasets in CRD (59)</div>
+        <div class="card-body">
+            <div class="table-scroll">
+                <table>
+                    <thead><tr><th>Dataset Title</th><th>Type</th></tr></thead>
+                    <tbody>
+        <tr>
+            <td>Existing Water Supply Pump Station</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Existing Building As Received From Client</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Existing Landfill Site</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing wardwise land values</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Proposed Drainage Catchment</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Proposed Sewerage Transfer Station</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Place Name</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Planning Zone Boundaries</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Drainage Channel</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing landuse plan</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing wardwise population densities</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Proposed Planning District Boundaries</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Proposed Sewerage Zones</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza district boundaries</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed bus rapid transit network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed road right of way</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Proposed Drainage Natural Wetland</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed sewerage constructed wetland</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing electricity network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Proposed Drainage Network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed electric sub station</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed drainage detention pond</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing town planning schemes</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed environment treatment zone</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing water supply zone</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza ward boundaries</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Existing Road Centreline</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza regional boundaries</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Stp Pumping Station Transfer Station</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing natural drainage network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing Solid Waste Collection</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Solid Waste Collection Zone</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing Water Supply Intake</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Water Supply Zone</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing Service Reservoir</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza landmark</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Proposed Water Supply Network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Existing Sewer Network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Proposed Soild Waste Landfill</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Proposed Electricity Network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Water Distribution Centre - Points</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Urban Design Planning Boundary</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Water Distribution Centre - Line</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Existing Ferry Route</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Proposed ICT Shape</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza approved projects</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing electricity sub stations</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed solid waste transfer station</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Ict network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed Water Supply Intake</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza proposed sewer network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing waste water treatment plant</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing Ict Base Station</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing Dumping Site</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing main dumping site</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza existing Ict Network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza Existing Water Supply Network</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>contour_2m</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr>
+        <tr>
+            <td>Mwanza contour_10m</td>
+            <td><span class="badge" style="background:#007064">vector</span></td>
+        </tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Data from <a href="https://crd.resilienceacademy.ac.tz" target="_blank">Resilience Academy CRD</a>
+    &bull; Mwanza Master Plan &bull; Dashboard generated with Python, Leaflet &amp; Chart.js
+</div>
+
+<script>
+    // ---- Map ----
+    var map = L.map('map').setView([-2.537270323877968, 32.949348375277346], 12);
+
+    var baseLayers = {
+        'CartoDB Light': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19
+        }),
+        'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap', maxZoom: 19
+        }),
+        'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri', maxZoom: 19
+        })
+    };
+    baseLayers['CartoDB Light'].addTo(map);
+    L.control.layers(baseLayers).addTo(map);
+
+    // ---- Load GeoJSON layers ----
+    var allLayers = {};
+    var layerMeta = {
+        "geonode:regional_boundaries": {
+                "color": "#8E44AD",
+                "weight": 3,
+                "fill": 0.05,
+                "theme": "Administrative Boundaries",
+                "file": "data/regional_boundaries.geojson"
+        },
+        "geonode:district_boundaries_9a3af830e8c06df98d4319c7d480c542": {
+                "color": "#C0392B",
+                "weight": 2.5,
+                "fill": 0.08,
+                "theme": "Administrative Boundaries",
+                "file": "data/district_boundaries_9a3af830e8c06df98d4319c7d480c542.geojson"
+        },
+        "geonode:ward_boundaries_3f7b0f55ee9ba5ff1b1d6823c209cd35": {
+                "color": "#E67E22",
+                "weight": 1.5,
+                "fill": 0.06,
+                "theme": "Administrative Boundaries",
+                "file": "data/ward_boundaries_3f7b0f55ee9ba5ff1b1d6823c209cd35.geojson"
+        },
+        "geonode:mwanza_health_facilities": {
+                "color": "#E74C3C",
+                "weight": 2,
+                "fill": 0.7,
+                "theme": "Health Facilities",
+                "file": "data/mwanza_health_facilities.geojson"
+        },
+        "geonode:mwanza_businesses": {
+                "color": "#007064",
+                "weight": 1,
+                "fill": 0.6,
+                "theme": "Businesses & Finance",
+                "file": "data/mwanza_businesses.geojson"
+        },
+        "geonode:mwanza_financial_amenities": {
+                "color": "#1ABC9C",
+                "weight": 1,
+                "fill": 0.7,
+                "theme": "Businesses & Finance",
+                "file": "data/mwanza_financial_amenities.geojson"
+        },
+        "geonode:mwanza_roads": {
+                "color": "#F39C12",
+                "weight": 2,
+                "fill": 0,
+                "theme": "Road Network",
+                "file": "data/mwanza_roads.geojson"
+        },
+        "geonode:existing_road_centreline": {
+                "color": "#D4AC6E",
+                "weight": 1.5,
+                "fill": 0,
+                "theme": "Road Network",
+                "file": "data/existing_road_centreline.geojson"
+        },
+        "geonode:existing_landuse_plan": {
+                "color": "#27AE60",
+                "weight": 1.5,
+                "fill": 0.2,
+                "theme": "Land Use",
+                "file": "data/existing_landuse_plan.geojson"
+        },
+        "geonode:existing_water_supply_network": {
+                "color": "#3498DB",
+                "weight": 2,
+                "fill": 0,
+                "theme": "Water Supply",
+                "file": "data/existing_water_supply_network.geojson"
+        },
+        "geonode:existing_water_supply_zone": {
+                "color": "#2980B9",
+                "weight": 1.5,
+                "fill": 0.1,
+                "theme": "Water Supply",
+                "file": "data/existing_water_supply_zone.geojson"
+        },
+        "geonode:existing_service_reservoir": {
+                "color": "#1F618D",
+                "weight": 2,
+                "fill": 0.6,
+                "theme": "Water Supply",
+                "file": "data/existing_service_reservoir.geojson"
+        },
+        "geonode:existing_natural_drainage_network": {
+                "color": "#5DADE2",
+                "weight": 2,
+                "fill": 0,
+                "theme": "Drainage & Flood",
+                "file": "data/existing_natural_drainage_network.geojson"
+        },
+        "geonode:mwanza_drainage_points": {
+                "color": "#2E86C1",
+                "weight": 1,
+                "fill": 0.7,
+                "theme": "Drainage & Flood",
+                "file": "data/mwanza_drainage_points.geojson"
+        },
+        "geonode:mwanza_rockfall_locations": {
+                "color": "#922B21",
+                "weight": 2,
+                "fill": 0.7,
+                "theme": "Hazards (Rockfall)",
+                "file": "data/mwanza_rockfall_locations.geojson"
+        },
+        "geonode:mwanza_households_at_risk_of_rockfall": {
+                "color": "#E74C3C",
+                "weight": 1,
+                "fill": 0.5,
+                "theme": "Hazards (Rockfall)",
+                "file": "data/mwanza_households_at_risk_of_rockfall.geojson"
+        },
+        "geonode:mwanza_tourist_facilities": {
+                "color": "#AF7AC5",
+                "weight": 1,
+                "fill": 0.7,
+                "theme": "Tourism & POI",
+                "file": "data/mwanza_tourist_facilities.geojson"
+        },
+        "geonode:mwanza_religious_facilities": {
+                "color": "#7D3C98",
+                "weight": 1,
+                "fill": 0.7,
+                "theme": "Tourism & POI",
+                "file": "data/mwanza_religious_facilities.geojson"
+        }
+};
+
+    // Load all GeoJSON files asynchronously
+    var loadPromises = [];
+    var layerData = {};
+
+    Object.keys(layerMeta).forEach(function(layerName) {
+        var meta = layerMeta[layerName];
+        var p = fetch(meta.file)
+            .then(function(r) { return r.json(); })
+            .then(function(geojson) {
+                layerData[layerName] = {
+                    geojson: geojson,
+                    color: meta.color,
+                    weight: meta.weight,
+                    fill: meta.fill,
+                    theme: meta.theme
+                };
+            })
+            .catch(function(err) {
+                console.warn('Failed to load ' + layerName + ':', err);
+            });
+        loadPromises.push(p);
+    });
+
+    Promise.all(loadPromises).then(function() {
+        console.log('All layers loaded:', Object.keys(layerData).length);
+
+    // Render order: boundaries first, then polygons, lines, points last
+    var renderOrder = [];
+    var boundaryLayers = [];
+    var otherLayers = [];
+    for (var ln in layerData) {
+        if (layerData[ln].theme === 'Administrative Boundaries') {
+            boundaryLayers.push(ln);
+        } else {
+            otherLayers.push(ln);
+        }
+    }
+    renderOrder = boundaryLayers.concat(otherLayers);
+
+    renderOrder.forEach(function(layerName) {
+        var data = layerData[layerName];
+        allLayers[layerName] = L.geoJSON(data.geojson, {
+            style: function(feature) {
+                var gt = feature.geometry.type;
+                if (gt === 'Point' || gt === 'MultiPoint') return null;
+                return {
+                    color: data.color,
+                    weight: data.weight,
+                    opacity: 0.85,
+                    fillColor: data.color,
+                    fillOpacity: data.fill,
+                    dashArray: data.theme === 'Administrative Boundaries' ? '6 3' : null
+                };
+            },
+            pointToLayer: function(feature, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: 6, fillColor: data.color, color: '#fff',
+                    weight: 1.5, opacity: 1, fillOpacity: 0.8
+                });
+            },
+            onEachFeature: function(feature, layer) {
+                var props = feature.properties;
+                var popup = '<div style="font-family:Inter,sans-serif;font-size:12px;max-width:280px">';
+                popup += '<div style="font-weight:700;margin-bottom:6px;color:#004640;border-bottom:2px solid ' + data.color + ';padding-bottom:4px">' + layerName.replace('geonode:', '').replace(/_/g, ' ') + '</div>';
+                var count = 0;
+                for (var key in props) {
+                    if (props[key] && key !== 'geometry' && count < 12) {
+                        popup += '<b>' + key + ':</b> ' + props[key] + '<br>';
+                        count++;
+                    }
+                }
+                popup += '</div>';
+                layer.bindPopup(popup);
+            }
+        }).addTo(map);
+    });
+
+    }); // end Promise.all
+
+    function toggleLayer(name, visible) {
+        if (allLayers[name]) {
+            if (visible) { map.addLayer(allLayers[name]); }
+            else { map.removeLayer(allLayers[name]); }
+        }
+    }
+
+    // ---- Theme Doughnut Chart ----
+    new Chart(document.getElementById('themeChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ["Administrative Boundaries", "Health Facilities", "Businesses & Finance", "Road Network", "Land Use", "Water Supply", "Drainage & Flood", "Hazards (Rockfall)", "Tourism & POI"],
+            datasets: [{
+                data: [63, 297, 7039, 16940, 170869, 2404, 3455, 1099, 658],
+                backgroundColor: ["#8E44AD", "#E74C3C", "#007064", "#F39C12", "#27AE60", "#3498DB", "#5DADE2", "#922B21", "#AF7AC5"],
+                borderWidth: 2, borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { font: { size: 10 }, padding: 8 } }
+            }
+        }
+    });
+
+    // ---- Business Bar Chart ----
+    new Chart(document.getElementById('bizChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ["convenience", "clothes", "vacant", "hairdresser", "electronics", "wholesale", "beauty", "car_parts", "beverages", "hardware", "tailor", "stationery"],
+            datasets: [{
+                label: 'Count',
+                data: [2090, 587, 482, 342, 211, 195, 178, 169, 163, 157, 151, 151],
+                backgroundColor: '#007064',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#F0F4F3' } },
+                y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+
+    // ---- Land Use Bar Chart ----
+    new Chart(document.getElementById('landUseChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ["existing_landuse_plan.99600", "existing_landuse_plan.42638", "existing_landuse_plan.42640", "existing_landuse_plan.42641", "existing_landuse_plan.42642", "existing_landuse_plan.42643", "existing_landuse_plan.42644", "existing_landuse_plan.42645", "existing_landuse_plan.42646", "existing_landuse_plan.42647", "existing_landuse_plan.42648", "existing_landuse_plan.42649"],
+            datasets: [{
+                label: 'Count',
+                data: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                backgroundColor: '#27AE60',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#F0F4F3' } },
+                y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
